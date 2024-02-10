@@ -1,0 +1,123 @@
+openapi: 3.0.3
+info:
+  title: Relying Party API
+  description: |-
+    Relying Party API
+  contact:
+    email: kotaro.otaka@example.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: http://localhost:4000
+tags:
+  - name: RP
+    description: RP
+paths:
+  /auth:
+    get:
+      tags:
+        - RP
+      summary: Begin
+      description: Begin
+      operationId: begin
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: callback_uri
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+      responses:
+        "302":
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                example: http://example.com/authorization_endpoint
+            Set-Cookie:
+              schema:
+                type: string
+        "500":
+          description: Internal Server Error
+    post:
+      tags:
+        - RP
+      summary: End
+      description: End
+      operationId: end
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                state:
+                  type: string
+              required:
+                - "state"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accees_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                required:
+                  - "accees_token"
+                  - "refresh_token"
+        "500":
+          description: Internal Server Error
+  /callback:
+    get:
+      tags:
+        - RP
+      description: Callback
+      summary: Callback
+      operationId: callback
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: cookie
+          required: true
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      responses:
+        "302":
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                example: http://localhost:3000/callback
+            Set-Cookie:
+              schema:
+                type: string
+        "500":
+          description: Internal Server Error
