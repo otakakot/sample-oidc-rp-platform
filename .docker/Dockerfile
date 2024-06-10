@@ -1,8 +1,8 @@
-FROM golang:1.22.0-alpine
+FROM golang:1.22.4-alpine
 
 WORKDIR /app
 
-RUN go install github.com/cosmtrek/air@latest
+RUN go install github.com/air-verse/air@latest
 
 ARG workdir
 
