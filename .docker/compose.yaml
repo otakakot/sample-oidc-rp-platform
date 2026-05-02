@@ -1,0 +1,76 @@
+services:
+  sp:
+    container_name: ${APP_NAME}-sp
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - workdir=cmd/sp
+    ports:
+      - 3000:3000
+    environment:
+      PORT: 3000
+    extra_hosts:
+      - localhost:host-gateway
+    volumes:
+      - ../:/app
+    restart: always
+    depends_on:
+      - rp
+  rp:
+    container_name: ${APP_NAME}-rp
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - workdir=cmd/rp
+    ports:
+      - 4000:4000
+    environment:
+      PORT: 4000
+      ISSUER: http://localhost:8080
+      CLIENT_ID: ""
+      CLIENT_SECRET: ""
+    extra_hosts:
+      - localhost:host-gateway
+    volumes:
+      - ../:/app
+    restart: always
+    depends_on:
+      - op
+  op:
+    container_name: ${APP_NAME}-op
+    restart: always
+    image: ghcr.io/zitadel/zitadel:v2.44.1
+    command: 'start-from-init --masterkey "MasterkeyNeedsToHave32Characters" --tlsMode disabled'
+    environment:
+      - 'ZITADEL_DATABASE_COCKROACH_HOST=cockroachdb'
+      - 'ZITADEL_EXTERNALSECURE=false'
+      - 'ZITADEL_USERNAME=zitadel-admin@zitadel.localhost'
+      - 'ZITADEL_PASSWORD=Password1!'
+      - 'ZITADEL_FIRSTINSTANCE_MACHINEKEYPATH=/machinekey/zitadel-admin-sa.json'
+      - 'ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_USERNAME=zitadel-admin-sa'
+      - 'ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_NAME=Admin'
+      - 'ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINEKEY_TYPE=1'
+    depends_on:
+      cockroachdb:
+        condition: 'service_healthy'
+    ports:
+      - 8080:8080
+      - 443:443
+    volumes:
+      - ../machinekey:/machinekey
+  cockroachdb:
+    container_name: ${APP_NAME}-db
+    restart: always
+    image: cockroachdb/cockroach:v23.1.14
+    command: 'start-single-node --insecure'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health?ready=1"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 20s
+    ports:
+      - 9090:8080
+      - 26257:26257

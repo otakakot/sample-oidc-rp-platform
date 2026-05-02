@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: Service Provider API
+  description: |-
+    Service Provider API
+  contact:
+    email: kotaro.otaka@example.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+tags:
+  - name: RP
+    description: RP
+paths:
+  /:
+    get:
+      tags:
+        - RP
+      summary: Index
+      description: Index
+      operationId: index
+      responses:
+        "200":
+          description: OK
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          description: Internal Server Error
+  /auth:
+    get:
+      tags:
+        - RP
+      summary: Auth
+      description: Auth
+      operationId: auth
+      responses:
+        "302":
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+                example: http://localhost:4000/auth
+            Set-Cookie:
+              schema:
+                type: string
+        "500":
+          description: Internal Server Error
+  /callback:
+    get:
+      tags:
+        - RP
+      description: Callback
+      summary: Callback
+      operationId: callback
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        - name: state
+          in: cookie
+          required: true
+          schema:
+            type: string
+            example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      responses:
+        "200":
+          description: Found
+          content:
+            text/html:
+              schema:
+                type: string
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+        "500":
+          description: Internal Server Error
